@@ -22,13 +22,13 @@ func main() {
 	for {
 		fmt.Println("Listening...")
 
-		inFile, inFileErr := os.OpenFile(IN_FILE_PATH, os.O_RDONLY, 0644)
+		inFile, inFileErr := os.OpenFile(IN_FILE_PATH, os.O_RDONLY|os.O_CREATE, 0644)
 		if inFileErr != nil {
 			log.Panic("Error while opening/creating in.txt:", inFileErr)
 		}
 		defer inFile.Close()
 
-		outFile, outFileErr := os.OpenFile(OUT_FILE_PATH, os.O_TRUNC|os.O_WRONLY, 0644)
+		outFile, outFileErr := os.OpenFile(OUT_FILE_PATH, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 		if outFileErr != nil {
 			log.Fatal("Error while opening/creating in.txt:", inFileErr)
 		}
@@ -55,6 +55,6 @@ func main() {
 		inFile.Close()
 		outFile.Close()
 
-		time.Sleep(time.Second / 2)
+		time.Sleep(time.Second)
 	}
 }

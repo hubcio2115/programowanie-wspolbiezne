@@ -14,7 +14,7 @@ const (
 )
 
 func main() {
-	inFile, inFileErr := os.OpenFile(IN_FILE_PATH, os.O_WRONLY|os.O_TRUNC, 0644)
+	inFile, inFileErr := os.OpenFile(IN_FILE_PATH, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	if inFileErr != nil {
 		log.Panic("Error while opening/creating in.txt:", inFileErr)
 	}
