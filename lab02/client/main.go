@@ -34,9 +34,9 @@ func main() {
 	for {
 		serverBuffer, err = os.OpenFile(*serverBufferPath, os.O_EXCL|os.O_WRONLY|os.O_CREATE, 0655)
 		if err == nil {
-			fmt.Println("Couldn't access server since it's bussy.")
 			break
 		}
+		fmt.Println(err)
 		time.Sleep(time.Millisecond * 200)
 	}
 	defer serverBuffer.Close()
