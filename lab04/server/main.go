@@ -12,6 +12,8 @@ import (
 const QUEUE_PATH = "./server-queue"
 
 func readData(filePath *string) map[string]string {
+	log.Println(os.Getpid())
+
 	database, err := os.Open(*filePath)
 	if err != nil {
 		log.Fatal("Couldn't read the database!")
