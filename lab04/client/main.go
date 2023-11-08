@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"syscall"
-	"time"
 )
 
 const QUEUE_PATH = "./server-queue"
@@ -30,35 +29,24 @@ func main() {
 	}
 
 	command := fmt.Sprintf("%s %s", *id, *outFilePath)
-	log.Println(command)
-
-	writer := bufio.NewWriter(serverQueue)
-
-	_, err = writer.WriteString(command)
-	writer.Flush()
+	_, err = serverQueue.WriteString(command)
 	if err != nil {
 		log.Fatalf("Couldn't write to queue: %s", err.Error())
 	}
 
-	for {
-		log.Println("Opening out...")
-		outFile, err := os.Open(*outFilePath)
-		if err != nil {
-			log.Println(err)
+	serverQueue.Close()
 
-			time.Sleep(time.Second)
-			continue
-		}
-		log.Println("Opened out...")
-
-		scanner := bufio.NewScanner(outFile)
-
-		for scanner.Scan() {
-			line := scanner.Text()
-			fmt.Println(line)
-		}
-
-		outFile.Close()
-		break
+	outFile, err := os.Open(*outFilePath)
+	if err != nil {
+		log.Println(err)
 	}
+
+	scanner := bufio.NewScanner(outFile)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		fmt.Println(line)
+	}
+
+	outFile.Close()
 }

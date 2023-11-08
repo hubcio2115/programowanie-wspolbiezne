@@ -52,16 +52,11 @@ func main() {
 		}
 
 		scanner := bufio.NewScanner(queue)
-		command := scanner.Text()
-		command = scanner.Text()
-		log.Println(command)
 
 		for scanner.Scan() {
-			log.Println(command)
+			command := scanner.Text()
 
 			pair := strings.Split(command, " ")
-
-			log.Println(pair)
 
 			name := data[pair[0]]
 			path := pair[1]
@@ -71,18 +66,20 @@ func main() {
 				log.Printf("Couldn't read out queue for: %s", pair[1])
 			}
 
-			writer := bufio.NewWriter(outFifo)
-
 			if name == "" {
-				writer.WriteString("Nie ma")
+				outFifo.WriteString("Nie ma")
 			} else {
-				writer.WriteString(name)
+				outFifo.WriteString(name)
+			}
+
+			if err != nil {
+				log.Println(err.Error())
 			}
 
 			outFifo.Close()
-			queue.Close()
 		}
 
-		log.Println("End loop")
+		queue.Close()
+		log.Print("End loop\n\n")
 	}
 }
