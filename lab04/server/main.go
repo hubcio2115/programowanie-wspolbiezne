@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 	"syscall"
 )
@@ -32,7 +33,25 @@ func readData(filePath *string) map[string]string {
 	return res
 }
 
+func catchSignals() {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGUSR1)
+
+	for {
+		sig := <-ch
+
+		if sig == syscall.SIGUSR1 {
+			log.Printf("Program terminated with a signal: %v\n", sig)
+			os.Exit(0)
+		}
+
+		log.Printf("Ignoring signal: %v\n", sig)
+	}
+}
+
 func main() {
+	go catchSignals()
+
 	databasePath := flag.String("databasePath", "./database", "Path to the database text file.")
 
 	flag.Parse()
