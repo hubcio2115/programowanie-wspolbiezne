@@ -13,8 +13,6 @@ import (
 const QUEUE_PATH = "./server-queue"
 
 func readData(filePath *string) map[string]string {
-	log.Println(os.Getpid())
-
 	database, err := os.Open(*filePath)
 	if err != nil {
 		log.Fatal("Couldn't read the database!")
@@ -51,6 +49,8 @@ func catchSignals() {
 
 func main() {
 	go catchSignals()
+
+	log.Println(os.Getpid())
 
 	databasePath := flag.String("databasePath", "./database", "Path to the database text file.")
 
@@ -91,10 +91,6 @@ func main() {
 				outFifo.WriteString("Nie ma")
 			} else {
 				outFifo.WriteString(name)
-			}
-
-			if err != nil {
-				log.Println(err.Error())
 			}
 
 			outFifo.Close()
