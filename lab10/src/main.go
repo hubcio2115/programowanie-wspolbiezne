@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"math"
+	"sync"
 	"time"
 )
 
@@ -10,9 +11,10 @@ const (
 	NUMBER_OF_THREADS int = 5
 	LEFT              int = 1_000_000
 	RIGHT             int = 2_000_000
+	CHUNK_SIZE        int = (RIGHT - LEFT) / NUMBER_OF_THREADS
 )
 
-func isPrime(number int) bool {
+func isPrimePart1(number int) bool {
 	for i := 2; i < number-1; i++ {
 		if i*i > number {
 			return true
@@ -24,7 +26,7 @@ func isPrime(number int) bool {
 	return true
 }
 
-func betterIsPrime(number int, smallPrimes []int) bool {
+func isPrimePart2(number int, smallPrimes []int) bool {
 	for _, prime := range smallPrimes {
 		if number%prime == 0 {
 			return false
@@ -36,53 +38,67 @@ func betterIsPrime(number int, smallPrimes []int) bool {
 	return true
 }
 
-func multithreadedBetterIsPrime(number int, smallPrimes []int) bool {
-	ch := make(chan bool, 1)
-
-	for i := 0; i < NUMBER_OF_THREADS; i++ {
-		from := i * len(smallPrimes) / NUMBER_OF_THREADS
-		to := (i + 1) * len(smallPrimes) / NUMBER_OF_THREADS
-
-		slice := smallPrimes[from:to]
-		go func() {
-			for _, prime := range slice {
-				if number%prime == 0 {
-					ch <- false
-				} else if prime*prime > number {
-					ch <- true
-				}
-			}
-		}()
-	}
-
-	return <-ch
-}
-
-func calculate(left int, right int, cb func(int, []int) bool) {
+func calculate(left int, right int) []int {
 	smallPrimes := []int{}
 	middle := int(math.Ceil(math.Sqrt(float64(right))))
 	for i := 2; i <= middle; i++ {
-		if isPrime(i) {
+		if isPrimePart1(i) {
 			smallPrimes = append(smallPrimes, i)
 		}
 	}
 
 	primes := []int{}
 	for i := left; i <= right; i++ {
-		if cb(i, smallPrimes) {
+		if isPrimePart2(i, smallPrimes) {
 			primes = append(primes, i)
 		}
 	}
+
+	return primes
+}
+
+func multithreadedCalculate(left int, right int) {
+	smallPrimes := []int{}
+	middle := int(math.Ceil(math.Sqrt(float64(right))))
+	for i := 2; i <= middle; i++ {
+		if isPrimePart1(i) {
+			smallPrimes = append(smallPrimes, i)
+		}
+	}
+
+	primes := []int{}
+	wg := sync.WaitGroup{}
+	wg.Add(NUMBER_OF_THREADS)
+	mx := sync.Mutex{}
+
+	for i := 0; i < NUMBER_OF_THREADS; i++ {
+		value := i
+		go func() {
+			for j := LEFT + value*CHUNK_SIZE; j <= LEFT+(value+1)*CHUNK_SIZE; j++ {
+				if isPrimePart2(j, smallPrimes) {
+					mx.Lock()
+					primes = append(primes, j)
+					mx.Unlock()
+				}
+			}
+
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 }
 
 func main() {
 	start := time.Now()
-	calculate(LEFT, RIGHT, betterIsPrime)
+	calculate(LEFT, RIGHT)
+	end := time.Since(start)
 
-	log.Printf("Sequential: %d", time.Since(start))
+	log.Printf("Sequential: %dms", end)
 
 	start = time.Now()
-	calculate(LEFT, RIGHT, multithreadedBetterIsPrime)
+	multithreadedCalculate(LEFT, RIGHT)
+	end = time.Since(start)
 
-	log.Printf("Sequential: %d", time.Since(start))
+	log.Printf("Parallel:   %dms", end)
 }
